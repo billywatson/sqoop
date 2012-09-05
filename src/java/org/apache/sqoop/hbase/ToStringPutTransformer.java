@@ -113,6 +113,18 @@ public class ToStringPutTransformer extends PutTransformer {
       throw new IOException("Column family can't be NULL.");
     }
 
+    String timeStampCol = getTimeStampColumn();
+
+    byte [] colFamilyBytes = Bytes.toBytes(colFamily);
+
+    Object rowKey = fields.get(rowKeyCol);
+    if (null == rowKey) {
+      // If the row-key column is null, we don't insert this row.
+      LOG.warn("Could not insert row with null value for row-key column: "
+          + rowKeyCol);
+      return null;
+    }
+
     if (isCompositeKey) {
       // Indicates row-key is a composite key (multiple attribute key)
       List<String> rowKeyList = new ArrayList<String>();
@@ -165,9 +177,23 @@ public class ToStringPutTransformer extends PutTransformer {
     Put put = new Put(Bytes.toBytes(rowKey));
     byte[] colFamilyBytes = Bytes.toBytes(colFamily);
 
+    Object timeStamp = null;
+    if (null != timeStampCol && !timeStampCol.isEmpty()){
+      timeStamp = record.get(timeStampCol);
+    }
+    if (null != timeStamp && !((timeStamp instanceof Long)
+        || (timeStamp instanceof Integer))) {
+      LOG.warn(
+          "the time stamp column should be Long or Integer type, "
+          + " but the actual column: " + timeStampCol
+          + ", type: " + timeStamp.getClass());
+      timeStamp = null;
+    }
+
     for (Map.Entry<String, Object> fieldEntry : record.entrySet()) {
       String colName = fieldEntry.getKey();
       boolean rowKeyCol = false;
+
       /*
        * For both composite key and normal primary key,
        * check if colName is part of rowKey.
@@ -177,12 +203,19 @@ public class ToStringPutTransformer extends PutTransformer {
         rowKeyCol = true;
       }
 
-      if (!rowKeyCol || addRowKey) {
-        // check addRowKey flag before including rowKey field.
+      // if this column is not the timestamp column AND this is not the row key 
+      // or we're supposed to be adding the row key
+      if (!colName.equals(timeStampCol) && (!rowKeyCol || addRowKey)) {
+        // add the field
         Object val = fieldEntry.getValue();
         if (null != val) {
-          put.add(colFamilyBytes, getFieldNameBytes(colName),
-              Bytes.toBytes(toHBaseString(val)));
+          if (timeStamp == null) {
+            put.add(colFamilyBytes, getFieldNameBytes(colName),
+                Bytes.toBytes(val.toString()));
+          } else {
+            put.add(colFamilyBytes, getFieldNameBytes(colName), (Long)timeStamp,
+                Bytes.toBytes(val.toString()));
+          }
         }
       }
     }

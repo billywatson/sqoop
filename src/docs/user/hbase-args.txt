@@ -31,6 +31,8 @@ Argument                      Description
                               key, then <col> must be in the form of a
                               comma-separated list of composite key
                               attributes
++\--hbase-timestamp-column <col>+ Specifies which input column to use as \
+                              the raw timestamp 
 +\--hbase-table <table-name>+ Specifies an HBase table to use as the \
                               target instead of HDFS
 --------------------------------------------------------------------------
