@@ -77,6 +77,12 @@ public class HBasePutProcessor implements Closeable, Configurable,
    */
   public static final String ADD_ROW_KEY = "sqoop.hbase.add.row.key";
   public static final boolean ADD_ROW_KEY_DEFAULT = false;
+  
+  /**
+   *  Configuration key specifying the BulkLoad temp directory to use.
+   */
+  public static final String BULK_LOAD_DIR_KEY = 
+      "sqoop.hbase.bulk.load.tmp.dir";
 
   private Configuration conf;
 

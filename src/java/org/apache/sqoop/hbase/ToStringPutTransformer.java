@@ -113,17 +113,7 @@ public class ToStringPutTransformer extends PutTransformer {
       throw new IOException("Column family can't be NULL.");
     }
 
-    String timeStampCol = getTimeStampColumn();
-
     byte [] colFamilyBytes = Bytes.toBytes(colFamily);
-
-    Object rowKey = fields.get(rowKeyCol);
-    if (null == rowKey) {
-      // If the row-key column is null, we don't insert this row.
-      LOG.warn("Could not insert row with null value for row-key column: "
-          + rowKeyCol);
-      return null;
-    }
 
     if (isCompositeKey) {
       // Indicates row-key is a composite key (multiple attribute key)
@@ -176,6 +166,7 @@ public class ToStringPutTransformer extends PutTransformer {
     // Put row-key in HBase
     Put put = new Put(Bytes.toBytes(rowKey));
     byte[] colFamilyBytes = Bytes.toBytes(colFamily);
+    String timeStampCol = getTimeStampColumn();
 
     Object timeStamp = null;
     if (null != timeStampCol && !timeStampCol.isEmpty()){
@@ -210,11 +201,21 @@ public class ToStringPutTransformer extends PutTransformer {
         Object val = fieldEntry.getValue();
         if (null != val) {
           if (timeStamp == null) {
-            put.add(colFamilyBytes, getFieldNameBytes(colName),
-                Bytes.toBytes(val.toString()));
+              if ( val instanceof byte[]) {
+                put.add(colFamilyBytes, getFieldNameBytes(colName),
+                    (byte[])val);
+              } else {
+                put.add(colFamilyBytes, getFieldNameBytes(colName),
+                    Bytes.toBytes(val.toString()));
+              }
           } else {
-            put.add(colFamilyBytes, getFieldNameBytes(colName), (Long)timeStamp,
-                Bytes.toBytes(val.toString()));
+              if ( val instanceof byte[]) {
+                put.add(colFamilyBytes, getFieldNameBytes(colName), (Long)timeStamp,
+                    (byte[])val);
+              } else {
+                put.add(colFamilyBytes, getFieldNameBytes(colName), (Long)timeStamp,
+                    Bytes.toBytes(val.toString()));
+              }
           }
         }
       }
