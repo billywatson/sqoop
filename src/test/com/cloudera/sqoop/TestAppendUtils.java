@@ -311,5 +311,16 @@ public class TestAppendUtils extends ImportJobTestCase {
     utils.append();
   }
 
+  /**
+   * Test that getTempAppendDir returns a usable directory name. The issue is that
+   * the previous version generated names that were not compatible with kitesdk's
+   * rules that directory names can't start with an integer
+   * 
+   * @throws IOException
+   */
+  @Test
+  public void testGetTempAppendDirReturnsKiteCompatibleName() throws IOException {
+    assertTrue(false);
+  }
 }
 
