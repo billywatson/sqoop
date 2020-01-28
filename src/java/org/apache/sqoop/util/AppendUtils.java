@@ -272,7 +272,7 @@ public class AppendUtils {
    */
   public static Path getTempAppendDir(String salt, SqoopOptions options) {
     String uuid = UUID.randomUUID().toString().replace("-", "");
-    String tempDir = options.getTempRootDir() + Path.SEPARATOR + uuid + "_" + salt;
+    String tempDir = options.getTempRootDir() + Path.SEPARATOR + options.getTableName() + "_" + uuid + "_" + salt;
     return new Path(tempDir);
   }
 

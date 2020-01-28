@@ -320,7 +320,29 @@ public class TestAppendUtils extends ImportJobTestCase {
    */
   @Test
   public void testGetTempAppendDirReturnsKiteCompatibleName() throws IOException {
-    assertTrue(false);
+    Configuration conf = new Configuration();
+    if (!isOnPhysicalCluster()) {
+      conf.set(CommonArgs.FS_DEFAULT_NAME, CommonArgs.LOCAL_FS);
+    }
+    SqoopOptions options = new SqoopOptions(conf);
+    String tableName = "meep";
+    options.setTableName(tableName);
+    Integer saltHashcode = "abcde".hashCode();
+    String salt = Integer.toHexString(saltHashcode);
+
+    Path tempAppendDir = AppendUtils.getTempAppendDir(salt, options);
+
+    String tempAppendDirStr = tempAppendDir.toString();
+    Pattern expectedTempAppendDirPattern = Pattern.compile(
+      // pattern includes \\w{32} which is the UUID that is generated in the code
+      "_sqoop/" + tableName + "_\\w{32}_" + salt
+    );
+    String message = tempAppendDirStr + " not equal to " + expectedTempAppendDirPattern;
+    Matcher tempAppendDirStrMatchesExpected = expectedTempAppendDirPattern.matcher(tempAppendDirStr);
+
+    assertTrue(
+      message,
+      tempAppendDirStrMatchesExpected.matches());
   }
 }
 
